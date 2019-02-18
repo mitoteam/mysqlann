@@ -8,6 +8,8 @@ import (
 type queryTablesList []*queryTable
 
 type selectQuery struct {
+	baseQuery
+
 	tables queryTablesList
 }
 
@@ -56,8 +58,15 @@ func (q *selectQuery) AddTable(table_name string, alias string, fields ...string
 	return q //for method chaining
 }
 
+func (q *selectQuery) Where(args ...Anything) *selectQuery {
+	q.addWhere(args...)
+
+	return q
+}
+
 func (q *selectQuery) Sql() string {
 	var sb strings.Builder
+	sb.Grow(1024) //pre-optimization
 
 	sb.WriteString("SELECT ")
 
@@ -80,6 +89,9 @@ func (q *selectQuery) Sql() string {
 		sb.WriteString("`" + table.Name + "` " + table.Alias)
 	}
 	sb.WriteString(")")
+
+	//WHERE
+	q.buildWhere(&sb)
 
 	return sb.String()
 }
