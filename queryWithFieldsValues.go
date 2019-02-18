@@ -63,5 +63,18 @@ func (q *queryWithFieldsValues) buildFieldsValues(sb *strings.Builder, insert bo
 		}
 
 		sb.WriteString(")")
+	} else { //update
+		var first= true
+		for field_name, value := range q.field_values {
+			if first {
+				first = false
+			} else {
+				sb.WriteString(", ")
+			}
+
+			sb.WriteString(field_name)
+			sb.WriteString("=")
+			sb.WriteString(AnythingToSql(value))
+		}
 	}
 }
