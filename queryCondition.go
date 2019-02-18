@@ -128,10 +128,11 @@ func (qc *queryCondition) Sql(multiline bool) string {
 			} else{
 				sb.WriteString(" ")
 			}
+
+			sb.WriteString(qc.OperatorSql())
+			sb.WriteString(" ")
 		}
 
-		sb.WriteString(qc.OperatorSql())
-		sb.WriteString(" ")
 		sb.WriteString(string_condition)
 	}
 
