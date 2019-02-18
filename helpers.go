@@ -1,44 +1,5 @@
 package mysqlann
 
-import "strings"
-
-type baseQuery struct {
-	initialized bool
-	conditions  *queryCondition
-}
-
-func (q *baseQuery) init() {
-	q.conditions = And()
-}
-
-func (q *baseQuery) checkInit() {
-	if !q.initialized {
-		q.init()
-		q.initialized = true
-	}
-}
-
-func (q *baseQuery) addWhere(args ...Anything) {
-	q.checkInit()
-
-	q.conditions.Add(args...)
-}
-
-func (q *baseQuery) buildWhere(sb *strings.Builder) {
-	//not initialized
-	if q.conditions == nil {
-		return
-	}
-
-	//no conditions added
-	if q.conditions.IsEmpty() {
-		return
-	}
-
-	sb.WriteString("\nWHERE ")
-	sb.WriteString(q.conditions.Sql(true))
-}
-
 //https://gist.github.com/siddontang/8875771
 func Escape(value string) string {
 	dest := make([]byte, 0, 2*len(value))

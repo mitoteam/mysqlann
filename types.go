@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+//region Anything
 type Anything interface{}
 
 func AnythingToSql(value Anything) string {
@@ -28,3 +29,14 @@ func AnythingToString(value Anything) string {
 		return fmt.Sprint(v)
 	}
 }
+//endregion
+
+//region Query interface
+type Query interface {
+	Sql() string
+}
+//endregion
+
+type queryTablesList []*queryTable
+
+type queryFieldsValues map[string]Anything

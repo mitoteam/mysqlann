@@ -5,10 +5,8 @@ import (
 	"strings"
 )
 
-type queryTablesList []*queryTable
-
 type selectQuery struct {
-	baseQuery
+	queryWithWhere
 
 	tables queryTablesList
 }
