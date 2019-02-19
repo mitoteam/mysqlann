@@ -1,6 +1,8 @@
 # MiTo Team MysqlAnn
 MySQL query builder for Golang
 
+*WARNING*: Not ready for production yet
+
 ```go
 	var q = mysqlann.Select("mt_system_users", "u", "ID", "UserName")
 	fmt.Println(q.Sql())
