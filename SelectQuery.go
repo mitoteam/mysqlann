@@ -2,6 +2,7 @@ package mysqlann
 
 import (
 	"database/sql"
+	"errors"
 	"strconv"
 	"strings"
 )
@@ -94,6 +95,23 @@ func (q *selectQuery) QueryRow() (row []interface{}, err error) {
 
 	if rows.Next() {
 		row = readRow(rows)
+	}
+
+	return row, err
+}
+
+func (q *selectQuery) QueryRowMap() (row map[string]interface{}, err error) {
+	rows, err := q.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if rows.Next() {
+		row = readRowMap(rows)
+	} else {
+		row = nil
+		err = errors.New("Query does not return data")
 	}
 
 	return row, err
