@@ -87,6 +87,14 @@ func strToValue(str string, ct *sql.ColumnType) (r interface{}) {
 	case "VARCHAR":
 		r = str
 
+	case "INT":
+		v, err := strconv.Atoi(str)
+		if err == nil {
+			r = v
+		} else {
+			r = "[ERROR: " + err.Error() + "]"
+		}
+
 	case "BIGINT":
 		v, err := strconv.ParseInt(str, 10, 64)
 		if err == nil {

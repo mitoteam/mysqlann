@@ -40,24 +40,34 @@ func Select(table_name string, args ...string) *selectQuery {
 }
 
 func (q *selectQuery) AddTable(table_name string, alias string, fields ...string) *selectQuery {
-	if len(alias) == 0 {
-		alias = "t" + strconv.Itoa((len(q.tables) + 1))
-	}
-
 	table := &queryTable{
 		Name:  table_name,
-		Alias: alias,
 	}
 
-	table.init()
+	if alias == "*" {
+		table.all = true
+		alias = q.generateTableAlias()
+	} else if len(fields) == 1 && fields[0] == "*" {
+		table.all = true
+	} else {
+		for _, field_name := range fields {
+			table.AddField(field_name, "")
+		}
+	}
 
-	for _, field_name := range fields {
-		table.AddField(field_name, "")
+	if len(alias) == 0 {
+		table.Alias = q.generateTableAlias()
+	} else {
+		table.Alias = alias
 	}
 
 	q.tables = append(q.tables, table)
 
 	return q //for method chaining
+}
+
+func (q *selectQuery) generateTableAlias() string {
+	return  "t" + strconv.Itoa((len(q.tables) + 1))
 }
 
 func (q *selectQuery) Where(args ...Anything) *selectQuery {
@@ -127,15 +137,23 @@ func (q *selectQuery) Sql() string {
 	//fields count
 	f_cnt := 0
 	for _, table := range q.tables {
-		f_cnt += len(table.fields)
+		if table.fields != nil {
+			f_cnt += len(table.fields)
+		}
 	}
 
 	var field_expressions = make(map[string]string, f_cnt+len(q.expressions))
 
 	//FIELDS
 	for _, table := range q.tables {
-		for field_alias, field_name := range table.fields {
-			field_expressions[field_alias] = "`" + table.Alias + "`.`" + field_name + "`"
+		if table.all {
+			field_expressions["`" + table.Alias] = "`" + table.Alias + "`.*"
+		} else {
+			if table.fields != nil {
+				for field_alias, field_name := range table.fields {
+					field_expressions[field_alias] = "`" + table.Alias + "`.`" + field_name + "`"
+				}
+			}
 		}
 	}
 
@@ -153,7 +171,12 @@ func (q *selectQuery) Sql() string {
 		} else {
 			sb.WriteString(",\n       ")
 		}
-		sb.WriteString(expression + " AS `" + alias + "`")
+
+		sb.WriteString(expression)
+
+		if alias[0] != '`' {
+			sb.WriteString(" AS `" + alias + "`")
+		}
 	}
 
 	//FROM
