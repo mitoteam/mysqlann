@@ -29,6 +29,16 @@ func (q *updateQuery) Where(args ...Anything) *updateQuery {
 	return q //method chaining
 }
 
+func (q *updateQuery) Exec() (int64, error) {
+	r, err := exec(q)
+
+	if err == nil {
+		return r.RowsAffected()
+	}	else {
+		return 0, err
+	}
+}
+
 func (q *updateQuery) Sql() string {
 	var sb strings.Builder
 	sb.Grow(1024) //pre-optimization

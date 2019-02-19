@@ -23,6 +23,16 @@ func (q *insertQuery) Set(field_name string, value Anything) *insertQuery{
 	return q //method chaining
 }
 
+func (q *insertQuery) Exec() (int64, error) {
+	r, err := exec(q)
+
+	if err == nil {
+		return r.LastInsertId()
+	}	else {
+		return 0, err
+	}
+}
+
 func (q *insertQuery) Sql() string {
 	var sb strings.Builder
 	sb.Grow(1024) //pre-optimization

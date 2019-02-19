@@ -23,6 +23,16 @@ func (q *deleteQuery) Where(args ...Anything) *deleteQuery {
 	return q //method chaining
 }
 
+func (q *deleteQuery) Exec() (int64, error) {
+	r, err := exec(q)
+
+	if err == nil {
+		return r.RowsAffected()
+	}	else {
+		return 0, err
+	}
+}
+
 func (q *deleteQuery) Sql() string {
 	var sb strings.Builder
 	sb.Grow(1024) //pre-optimization
