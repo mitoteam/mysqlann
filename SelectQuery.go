@@ -85,14 +85,18 @@ func (q *selectQuery) Query() (*sql.Rows, error) {
 	return query(q)
 }
 
-func (q *selectQuery) QueryRow() (rows []string, err error) {
-	_, err = query(q)
+func (q *selectQuery) QueryRow() (row []interface{}, err error) {
+	rows, err := q.Query()
 
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, err
+	if rows.Next() {
+		row = readRow(rows)
+	}
+
+	return row, err
 }
 
 func (q *selectQuery) Sql() string {
@@ -108,7 +112,7 @@ func (q *selectQuery) Sql() string {
 		f_cnt += len(table.fields)
 	}
 
-	var field_expressions = make(map[string]string, f_cnt + len(q.expressions))
+	var field_expressions = make(map[string]string, f_cnt+len(q.expressions))
 
 	//FIELDS
 	for _, table := range q.tables {
@@ -118,8 +122,8 @@ func (q *selectQuery) Sql() string {
 	}
 
 	//EXPRESSIONS
-	if q.expressions != nil	{
-		for alias, expression := range q.expressions{
+	if q.expressions != nil {
+		for alias, expression := range q.expressions {
 			field_expressions[alias] = expression
 		}
 	}
@@ -134,13 +138,31 @@ func (q *selectQuery) Sql() string {
 		sb.WriteString(expression + " AS `" + alias + "`")
 	}
 
-
 	//FROM
-	sb.WriteString("\nFROM (")
-	for _, table := range q.tables {
-		sb.WriteString("`" + table.Name + "` " + table.Alias)
+	first = true
+	sb.WriteString("\nFROM ")
+
+	if len(q.tables) > 1 {
+		sb.WriteString("(")
 	}
-	sb.WriteString(")")
+
+	for _, table := range q.tables {
+		if first {
+			first = false
+		} else {
+			sb.WriteString(", ")
+		}
+
+		if table.Name == "DUAL" {
+			sb.WriteString(table.Name)
+		} else {
+			sb.WriteString("`" + table.Name + "` " + table.Alias)
+		}
+	}
+
+	if len(q.tables) > 1 {
+		sb.WriteString(")")
+	}
 
 	//WHERE
 	q.buildWhere(&sb)
