@@ -16,7 +16,7 @@ func exec(q Query) (sql.Result, error){
 	return db.Exec(q.Sql())
 }
 
-func query(q Query) (sql.Rows, error){
+func query(q Query) (*sql.Rows, error){
 	if(db == nil){
 		panic("connection not initialized")
 	}

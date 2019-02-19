@@ -1,6 +1,7 @@
 package mysqlann
 
 import (
+	"database/sql"
 	"strconv"
 	"strings"
 )
@@ -8,7 +9,9 @@ import (
 type selectQuery struct {
 	queryWithWhere
 
-	tables queryTablesList
+	tables      queryTablesList
+	expressions map[string]string
+	limit       int
 }
 
 func (q *selectQuery) init() {
@@ -17,7 +20,7 @@ func (q *selectQuery) init() {
 
 func Select(table_name string, args ...string) *selectQuery {
 	var q selectQuery
-	q.init();
+	q.init()
 
 	alias := ""
 
@@ -45,7 +48,7 @@ func (q *selectQuery) AddTable(table_name string, alias string, fields ...string
 		Alias: alias,
 	}
 
-	table.init();
+	table.init()
 
 	for _, field_name := range fields {
 		table.AddField(field_name, "")
@@ -62,24 +65,75 @@ func (q *selectQuery) Where(args ...Anything) *selectQuery {
 	return q
 }
 
+func (q *selectQuery) Expression(expression string, alias string) *selectQuery {
+	if q.expressions == nil {
+		q.expressions = make(map[string]string, 1)
+	}
+
+	q.expressions[alias] = expression
+
+	return q
+}
+
+func (q *selectQuery) Limit(limit int) *selectQuery {
+	q.limit = limit
+
+	return q
+}
+
+func (q *selectQuery) Query() (*sql.Rows, error) {
+	return query(q)
+}
+
+func (q *selectQuery) QueryRow() (rows []string, err error) {
+	_, err = query(q)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, err
+}
+
 func (q *selectQuery) Sql() string {
 	var sb strings.Builder
 	sb.Grow(1024) //pre-optimization
 
+	//SELECT
 	sb.WriteString("SELECT ")
 
+	//fields count
+	f_cnt := 0
+	for _, table := range q.tables {
+		f_cnt += len(table.fields)
+	}
+
+	var field_expressions = make(map[string]string, f_cnt + len(q.expressions))
+
 	//FIELDS
-	first := true
 	for _, table := range q.tables {
 		for field_alias, field_name := range table.fields {
-			if(first){
-				first = false
-			} else {
-				sb.WriteString(",\n       ")
-			}
-			sb.WriteString("`" + table.Alias + "`.`" + field_name + "` AS `" + field_alias + "`")
+			field_expressions[field_alias] = "`" + table.Alias + "`.`" + field_name + "`"
 		}
 	}
+
+	//EXPRESSIONS
+	if q.expressions != nil	{
+		for alias, expression := range q.expressions{
+			field_expressions[alias] = expression
+		}
+	}
+
+	first := true
+	for alias, expression := range field_expressions {
+		if first {
+			first = false
+		} else {
+			sb.WriteString(",\n       ")
+		}
+		sb.WriteString(expression + " AS `" + alias + "`")
+	}
+
 
 	//FROM
 	sb.WriteString("\nFROM (")
@@ -90,6 +144,11 @@ func (q *selectQuery) Sql() string {
 
 	//WHERE
 	q.buildWhere(&sb)
+
+	//LIMIT
+	if q.limit > 0 {
+		sb.WriteString("\nLIMIT " + strconv.Itoa(q.limit))
+	}
 
 	return sb.String()
 }
