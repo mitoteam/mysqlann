@@ -96,7 +96,7 @@ func (q *selectQuery) Query() (*sql.Rows, error) {
 	return query(q)
 }
 
-func (q *selectQuery) QueryRow() (row []interface{}, err error) {
+func (q *selectQuery) QueryRow() (row []Anything, err error) {
 	rows, err := q.Query()
 
 	if err != nil {
@@ -108,6 +108,22 @@ func (q *selectQuery) QueryRow() (row []interface{}, err error) {
 	}
 
 	return row, err
+}
+
+func (q *selectQuery) QueryColumn() (column []Anything, err error) {
+	rows, err := q.Query()
+
+	if err != nil {
+		return nil, err
+	}
+
+	column = make([]Anything, 0, 1) //expecting at least one value here
+
+	for rows.Next() {
+		column = append(column, readSingleColumnByIndex(rows, 0))
+	}
+
+	return column, err
 }
 
 func (q *selectQuery) QueryRowMap() (row map[string]interface{}, err error) {
