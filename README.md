@@ -1,4 +1,9 @@
 # MiTo Team MysqlAnn
+
+[![Go Report Card](https://goreportcard.com/badge/github.com/mitoteam/mysqlann)](https://goreportcard.com/report/github.com/mitoteam/mysqlann)
+[![GoDoc](https://godoc.org/github.com/mitoteam/mysqlann/gin?status.svg)](https://godoc.org/github.com/mitoteam/mysqlann)
+[![Sourcegraph](https://sourcegraph.com/github.com/mitoteam/mysqlann/-/badge.svg)](https://sourcegraph.com/github.com/mitoteam/mysqlann?badge)
+
 MySQL query builder for Golang
 
 *WARNING*: Not ready for production yet
